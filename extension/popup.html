@@ -3,14 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="styles.css">
     <title>Résumé YouTube</title>
+    <style>
+        body {
+            width: 300px;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 10px;
+        }
+        button {
+            background-color: #ff0000;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #summary {
+            margin-top: 10px;
+            font-size: 14px;
+            text-align: left;
+        }
+    </style>
 </head>
 <body>
-    <h1>Résumé de la vidéo</h1>
-    <input type="text" id="urlInput" placeholder="Entrez l'URL de la vidéo">
-    <button id="getSummary">Obtenir le résumé</button>
-    <div id="summary"></div>
+    <h3>Résumé YouTube</h3>
+    <button id="fetch-summary">Obtenir le résumé</button>
+    <p id="summary">Cliquez sur le bouton pour voir le résumé.</p>
+
     <script src="popup.js"></script>
 </body>
 </html>

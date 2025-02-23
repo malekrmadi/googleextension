@@ -1,16 +1,19 @@
-// popup.js
-document.getElementById('getSummary').addEventListener('click', () => {
-    const url = document.getElementById('urlInput').value;
-    fetch('http://localhost:5000/video_summary', {  // Assurez-vous que l'URL correspond à votre API
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ url: url })
-    })
-    .then(response => response.json())
-    .then(data => {
-        document.getElementById('summary').innerText = data.summary;
-    })
-    .catch(error => console.error('Erreur:', error));
+document.getElementById("fetch-summary").addEventListener("click", () => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (tabs.length === 0) return;
+        const videoUrl = tabs[0].url;
+
+        fetch(`http://localhost:5000/video_summary?url=${encodeURIComponent(videoUrl)}`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById("summary").innerText = data.summary || "Résumé indisponible.";
+        })
+        .catch(error => console.error('Erreur:', error));
+    });
 });
