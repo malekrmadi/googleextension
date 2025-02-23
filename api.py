@@ -6,6 +6,9 @@ import json
 from dotenv import load_dotenv
 import google.generativeai as genai
 
+from flask_cors import CORS
+CORS(app)
+
 # Charger les variables d'environnement
 load_dotenv()
 YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY")

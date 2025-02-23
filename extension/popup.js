@@ -1,8 +1,8 @@
 // popup.js
 document.getElementById('getSummary').addEventListener('click', () => {
     const url = document.getElementById('urlInput').value;
-    fetch('http://localhost:5000/summary', {  // Assurez-vous que l'URL correspond à votre API
-        method: 'POST',
+    fetch('http://localhost:5000/video_summary', {  // Assurez-vous que l'URL correspond à votre API
+        method: 'GET',
         headers: {
             'Content-Type': 'application/json'
         },
