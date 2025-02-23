@@ -1,214 +1,181 @@
-console.log("Content script chargé.");
-
-// Vérifie si la page est une vidéo YouTube
-function isYouTubeVideoPage() {
-    return window.location.href.includes("youtube.com/watch");
-}
-
-// Fonction pour récupérer l'URL de la vidéo en cours
-function getVideoUrl() {
-    return window.location.href;
-}
-
-// Fonction pour ajouter un bouton "Résumé" à côté du titre de la vidéo
-function addSummaryButton() {
-    if (!isYouTubeVideoPage()) return;
-
-    // Vérifie si le bouton existe déjà
-    if (document.getElementById("summary-btn")) return;
-
-    // Sélectionne le conteneur du titre de la vidéo (mutation observer friendly)
-    let titleContainer = document.querySelector("#title");
-    if (!titleContainer) return;
-
-    // Création du bouton
-    const button = document.createElement("button");
-    button.id = "summary-btn";
-    button.innerText = "📖 Résumé";
-    button.style.marginLeft = "10px";
-    button.style.padding = "8px 12px";
-    button.style.fontSize = "14px";
-    button.style.background = "#007BFF";
-    button.style.color = "#fff";
-    button.style.border = "none";
-    button.style.borderRadius = "5px";
-    button.style.cursor = "pointer";
-    button.style.fontWeight = "bold";
-
-    // Ajout d'un événement pour afficher le résumé
-    button.addEventListener("click", toggleSummaryPanel);
-
-    titleContainer.appendChild(button);
-}
-
-// Observer pour détecter les changements sur la page
-const observer = new MutationObserver(() => {
-    addSummaryButton();
-});
-observer.observe(document.body, { childList: true, subtree: true });
-
-// Fonction pour afficher ou masquer le panneau de résumé
-function toggleSummaryPanel() {
-    let summaryPanel = document.getElementById("summary-panel");
-    
-    if (summaryPanel) {
-        summaryPanel.style.display = summaryPanel.style.display === "none" ? "block" : "none";
-    } else {
-        fetchVideoSummary();
-    }
-}
-
-// Fonction pour récupérer et afficher le résumé
-function fetchVideoSummary() {
-    const videoUrl = getVideoUrl();
-
-    // Création du panneau latéral
-    let summaryPanel = document.createElement("div");
-    summaryPanel.id = "summary-panel";
-    summaryPanel.style.position = "fixed";
-    summaryPanel.style.top = "0";
-    summaryPanel.style.right = "0";
-    summaryPanel.style.width = "350px";
-    summaryPanel.style.height = "100vh";
-    summaryPanel.style.background = "white";
-    summaryPanel.style.borderLeft = "2px solid #007BFF";
-    summaryPanel.style.boxShadow = "rgba(0, 0, 0, 0.2) -2px 0 10px";
-    summaryPanel.style.padding = "15px";
-    summaryPanel.style.overflowY = "auto";
-    summaryPanel.style.zIndex = "10000";
-    summaryPanel.style.fontFamily = "Arial, sans-serif";
-
-    // Bouton de fermeture
-    let closeButton = document.createElement("button");
-    closeButton.innerText = "❌";
-    closeButton.style.position = "absolute";
-    closeButton.style.top = "10px";
-    closeButton.style.right = "10px";
-    closeButton.style.background = "transparent";
-    closeButton.style.border = "none";
-    closeButton.style.fontSize = "18px";
-    closeButton.style.cursor = "pointer";
-    closeButton.addEventListener("click", () => {
-        summaryPanel.style.display = "none";
-    });
-
-    // Loader
-    let loadingText = document.createElement("p");
-    loadingText.innerText = "Chargement du résumé...";
-    summaryPanel.appendChild(closeButton);
-    summaryPanel.appendChild(loadingText);
-    document.body.appendChild(summaryPanel);
-
-    // Appel API
-    fetch(`http://localhost:5000/video_summary?url=${encodeURIComponent(videoUrl)}`, {
-        method: 'GET',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' }
-    })
-    .then(response => response.json())
-    .then(data => {
-        summaryPanel.innerHTML = ""; // On vide le loader
-        summaryPanel.appendChild(closeButton);
-
-        // Affichage du résumé
-        let summaryTitle = document.createElement("h2");
-        summaryTitle.innerText = "Résumé de la vidéo";
-        summaryPanel.appendChild(summaryTitle);
-
-        let summaryContent = document.createElement("p");
-        summaryContent.innerText = data.summary || "Résumé indisponible.";
-        summaryPanel.appendChild(summaryContent);
-
-        // Affichage des chapitres
-        if (data.chapters && data.chapters.length > 0) {
-            let chaptersTitle = document.createElement("h3");
-            chaptersTitle.innerText = "Chapitres";
-            summaryPanel.appendChild(chaptersTitle);
-
-            data.chapters.forEach(chapter => {
-                let chapterElement = document.createElement("div");
-                chapterElement.style.marginBottom = "10px";
-
-                let chapterLink = document.createElement("a");
-                chapterLink.href = "#";
-                chapterLink.innerText = `⏩ ${chapter.start_time} - ${chapter.title}`;
-                chapterLink.style.color = "#007BFF";
-                chapterLink.style.fontWeight = "bold";
-                chapterLink.style.display = "block";
-                chapterLink.style.marginBottom = "5px";
-
-                // Gérer le clic sur le lien sans recharger la page
-                chapterLink.addEventListener("click", (event) => {
-                    event.preventDefault();
-                    const timeInSeconds = timeToSeconds(chapter.start_time);
-                    const videoElement = document.querySelector("video");
-                    if (videoElement) {
-                        videoElement.currentTime = timeInSeconds;
-                    }
-                });
-
-                let chapterSummary = document.createElement("p");
-                chapterSummary.innerText = chapter.chapter_summary;
-                chapterSummary.style.fontSize = "14px";
-                chapterSummary.style.color = "#555";
-                summaryPanel.appendChild(chapterElement);
-                chapterElement.appendChild(chapterLink);
-                chapterElement.appendChild(chapterSummary);
-            });
+(function() {
+    // Vérifie si la vidéo existe
+    const waitForVideoTitle = setInterval(() => {
+        const videoTitle = document.querySelector('#title h1');
+        if (videoTitle) {
+            clearInterval(waitForVideoTitle);
+            injectButton(videoTitle);
         }
-    })
-    .catch(error => {
-        console.error("Erreur:", error);
-        summaryPanel.innerHTML = "<p>Erreur lors de la récupération des données.</p>";
-        summaryPanel.appendChild(closeButton);
-    });
-}
+    }, 1000);
 
-// Fonction pour convertir "00:02:35" en secondes
-function timeToSeconds(time) {
-    const parts = time.split(":").map(Number);
-    return parts.length === 3 ? parts[0] * 3600 + parts[1] * 60 + parts[2] : parts[0] * 60 + parts[1];
-}
+    // Injection du bouton "Résumé" sous le titre de la vidéo
+    function injectButton(videoTitle) {
+        const summaryButton = document.createElement('button');
+        summaryButton.innerText = '📄 Résumé w kadhe kadhe';
+        Object.assign(summaryButton.style, {
+            padding: '6px 10px',
+            backgroundColor: '#007BFF',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            fontSize: '12px',
+            marginTop: '8px',
+            boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+            transition: 'background-color 0.3s, transform 0.3s',
+            animation: 'fadeIn 0.5s'
+        });
 
-// Gestion du PWA - Installation
-let deferredPrompt;
+        summaryButton.addEventListener('mouseover', () => {
+            summaryButton.style.backgroundColor = '#0056b3';
+            summaryButton.style.transform = 'scale(1.05)';
+        });
+        summaryButton.addEventListener('mouseout', () => {
+            summaryButton.style.backgroundColor = '#007BFF';
+            summaryButton.style.transform = 'scale(1)';
+        });
 
-window.addEventListener("beforeinstallprompt", (event) => {
-    event.preventDefault(); // Empêche l'affichage automatique de la bannière
-    deferredPrompt = event; // Stocke l'événement pour plus tard
-    console.log("Événement beforeinstallprompt capturé !");
-    
-    // Optionnel : affiche un bouton pour déclencher l'installation
-    showInstallButton();
-});
+        videoTitle.appendChild(summaryButton);
 
-function showInstallButton() {
-    const installButton = document.createElement("button");
-    installButton.id = "install-btn";
-    installButton.innerText = "Installer l'application";
-    installButton.style.position = "fixed";
-    installButton.style.bottom = "20px";
-    installButton.style.right = "20px";
-    installButton.style.padding = "10px";
-    installButton.style.background = "#007BFF";
-    installButton.style.color = "#fff";
-    installButton.style.border = "none";
-    installButton.style.borderRadius = "5px";
-    installButton.style.cursor = "pointer";
+        // Créer la sidebar
+        const summaryPanel = document.createElement('div');
+        summaryPanel.id = 'summaryPanel';
+        summaryPanel.innerHTML = `
+            <button id="closeSummary">❌</button>
+            <h1 style="font-size:28px; border-bottom:2px solid #007BFF; padding-bottom:8px; margin-bottom:15px;">Résumé de la vidéo</h1>
+            <div id="loading" class="hidden" style="text-align:center; font-weight:bold; font-size:20px; color: #FFD700;">⏳ Chargement...</div>
+            <div id="summary" class="summary-box" style="font-size:20px; line-height:1.6; color: #f0f0f0;"></div>
+        `;
 
-    document.body.appendChild(installButton);
+        Object.assign(summaryPanel.style, {
+            position: 'fixed',
+            top: '0',
+            right: '0',
+            width: '450px',
+            height: '100%',
+            background: '#1c1c1c',
+            color: 'white',
+            padding: '25px',
+            boxShadow: '-6px 0px 12px rgba(0, 0, 0, 0.5)',
+            overflowY: 'auto',
+            transform: 'translateX(100%)',
+            transition: 'transform 0.4s ease',
+            zIndex: '9999',
+            borderLeft: '4px solid #007BFF',
+            borderRadius: '20px 0 0 20px',
+            fontFamily: 'Arial, sans-serif'
+        });
 
-    installButton.addEventListener("click", () => {
-        if (deferredPrompt) {
-            deferredPrompt.prompt(); // Affiche la bannière d'installation
-            deferredPrompt.userChoice.then((choiceResult) => {
-                if (choiceResult.outcome === "accepted") {
-                    console.log("L'utilisateur a installé l'application");
+        document.body.appendChild(summaryPanel);
+
+        // Bouton fermer
+        const closeButton = summaryPanel.querySelector('#closeSummary');
+        Object.assign(closeButton.style, {
+            position: 'absolute',
+            top: '10px',
+            right: '10px',
+            background: 'red',
+            color: 'white',
+            border: 'none',
+            borderRadius: '50%',
+            fontSize: '20px',
+            width: '35px',
+            height: '35px',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            transition: 'background-color 0.3s'
+        });
+
+        closeButton.addEventListener('mouseover', () => {
+            closeButton.style.backgroundColor = '#ff4d4d';
+        });
+        closeButton.addEventListener('mouseout', () => {
+            closeButton.style.backgroundColor = 'red';
+        });
+
+        // Ouvrir la sidebar
+        summaryButton.addEventListener('click', () => {
+            const videoUrl = window.location.href;
+            const loading = summaryPanel.querySelector('#loading');
+            const summaryBox = summaryPanel.querySelector('#summary');
+
+            summaryPanel.style.transform = 'translateX(0)';
+            loading.classList.remove('hidden');
+            summaryBox.innerHTML = '';
+
+            fetch(`http://localhost:5000/video_summary?url=${encodeURIComponent(videoUrl)}`, {
+                method: 'GET',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                summaryBox.innerHTML = `<h2 style="font-size:24px; margin-bottom:10px; color: #FFD700;">Résumé général</h2><p>${data.summary || "Résumé indisponible."}</p>`;
+
+                if (data.chapters && data.chapters.length > 0) {
+                    const chaptersContainer = document.createElement('div');
+                    chaptersContainer.innerHTML = '<h2 style="font-size:24px; margin-top:20px; color: #FFD700;">Chapitres</h2>';
+
+                    data.chapters.forEach(chapter => {
+                        const chapterElement = document.createElement('div');
+                        chapterElement.classList.add('chapter');
+                        Object.assign(chapterElement.style, {
+                            padding: '10px 0',
+                            borderBottom: '1px solid #555'
+                        });
+
+                        const chapterLink = document.createElement('span');
+                        chapterLink.innerText = `⏩ ${chapter.start_time} - ${chapter.title}`;
+                        chapterLink.style.color = '#007BFF';
+                        chapterLink.style.fontWeight = 'bold';
+                        chapterLink.style.cursor = 'pointer';
+                        chapterLink.style.textDecoration = 'none';
+
+                        // Garde la vidéo en cours et avance au bon moment sans ouvrir un nouvel onglet
+                        chapterLink.addEventListener('click', () => {
+                            const video = document.querySelector('video');
+                            if (video) {
+                                video.currentTime = timeToSeconds(chapter.start_time);
+                                video.play();
+                            }
+                        });
+
+                        const chapterSummary = document.createElement('p');
+                        chapterSummary.innerText = chapter.chapter_summary;
+                        chapterSummary.style.color = '#bbb';
+                        chapterSummary.style.margin = '5px 0';
+
+                        chapterElement.appendChild(chapterLink);
+                        chapterElement.appendChild(chapterSummary);
+                        chaptersContainer.appendChild(chapterElement);
+                    });
+
+                    summaryBox.appendChild(chaptersContainer);
                 } else {
-                    console.log("L'utilisateur a refusé l'installation");
+                    summaryBox.innerHTML += '<p>Aucun chapitre trouvé.</p>';
                 }
-                deferredPrompt = null; // Réinitialise l'événement
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                summaryBox.innerText = 'Erreur lors de la récupération des données.';
+            })
+            .finally(() => {
+                loading.classList.add('hidden');
             });
-        }
-    });
-}
+        });
+
+        // Fermer la sidebar
+        closeButton.addEventListener('click', () => {
+            summaryPanel.style.transform = 'translateX(100%)';
+        });
+    }
+
+    // Fonction pour convertir "00:02:35" en secondes
+    function timeToSeconds(time) {
+        const parts = time.split(":").map(Number);
+        if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+        if (parts.length === 2) return parts[0] * 60 + parts[1];
+        return 0;
+    }
+})();
