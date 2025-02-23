@@ -1,31 +1,15 @@
 console.log("Content script chargé.");
 
-// Fonction pour récupérer l'URL actuelle de la vidéo YouTube
+// Fonction pour récupérer l'URL de la vidéo en cours
 function getVideoUrl() {
     return window.location.href;
 }
 
-// Fonction pour appeler l'API Flask
-function fetchSummary() {
+// Fonction pour récupérer les détails via l'API Flask
+function fetchVideoDetails() {
     const videoUrl = getVideoUrl();
-    
-    fetch(`http://localhost:5000/video_summary?url=${encodeURIComponent(videoUrl)}`, {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-            'Content-Type': 'application/json'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log("Résumé :", data.summary);
-        displaySummary(data.summary);
-    })
-    .catch(error => console.error('Erreur lors de la récupération du résumé:', error));
-}
 
-// Fonction pour afficher le résumé sous la vidéo
-function displaySummary(summary) {
+    // Affichage du loader
     let container = document.querySelector("#summary-container");
     if (!container) {
         container = document.createElement("div");
@@ -37,12 +21,29 @@ function displaySummary(summary) {
         container.style.borderRadius = "5px";
         document.querySelector("#above-the-fold").appendChild(container);
     }
-    container.innerHTML = `<h3>Résumé de la vidéo :</h3><p>${summary}</p>`;
+    container.innerHTML = "<p>Chargement...</p>";
+
+    fetch(`http://localhost:5000/video_summary?url=${encodeURIComponent(videoUrl)}`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log("Détails de la vidéo :", data);
+        container.innerHTML = `<h3>Détails de la vidéo :</h3><p>${data.summary}</p>`;
+    })
+    .catch(error => {
+        console.error('Erreur lors de la récupération des détails:', error);
+        container.innerHTML = "<p>Erreur lors de la récupération des détails.</p>";
+    });
 }
 
-// Ajoute un bouton pour récupérer le résumé
+// Ajoute un bouton sous la vidéo pour obtenir les détails
 const button = document.createElement("button");
-button.innerText = "Obtenir le résumé";
+button.innerText = "Obtenir les détails de la vidéo";
 button.style.marginTop = "10px";
 button.style.padding = "10px";
 button.style.background = "#ff0000";
@@ -50,6 +51,7 @@ button.style.color = "#fff";
 button.style.border = "none";
 button.style.borderRadius = "5px";
 button.style.cursor = "pointer";
-button.addEventListener("click", fetchSummary);
+button.addEventListener("click", fetchVideoDetails);
 
+// Ajoute le bouton sous la vidéo
 document.querySelector("#above-the-fold").appendChild(button);

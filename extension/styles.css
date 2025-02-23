@@ -1,45 +1,47 @@
-/* styles.css */
 body {
     font-family: Arial, sans-serif;
     width: 300px;
-    height: 400px; /* Set a fixed height for the popup */
-    overflow: hidden; /* Prevent overflow of the body */
+    height: 200px;
+    text-align: center;
 }
 
 h1 {
     font-size: 18px;
 }
 
-#urlInput {
-    width: 100%;
-    padding: 8px;
-    margin: 10px 0;
+button {
+    background-color: #ff0000;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
 }
 
 #summary {
     margin-top: 10px;
     font-size: 14px;
     color: #333;
-    height: calc(100% - 100px); /* Adjust height to fit within the popup */
-    overflow-y: auto; /* Enable vertical scrolling */
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 5px;
     background-color: #f9f9f9;
+    text-align: left;
 }
 
 #loading {
-    display: none; /* Initially hidden */
+    display: none;
     font-size: 14px;
-    color: #007BFF; /* Bootstrap primary color */
+    color: #007BFF;
     margin-top: 10px;
 }
 
 .hidden {
-    display: none; /* Class to hide elements */
-}
-
-button:disabled {
-    background-color: #ccc; /* Change button color when disabled */
-    cursor: not-allowed; /* Change cursor to indicate disabled state */
+    display: none;
 }
