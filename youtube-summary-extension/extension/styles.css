@@ -1,0 +1,21 @@
+/* styles.css */
+body {
+    font-family: Arial, sans-serif;
+    width: 300px;
+}
+
+h1 {
+    font-size: 18px;
+}
+
+#urlInput {
+    width: 100%;
+    padding: 8px;
+    margin: 10px 0;
+}
+
+#summary {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #333;
+}

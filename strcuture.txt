@@ -1,0 +1,22 @@
+youtube-summary-extension/
+│── api.py                # API Flask (point d'entrée unique)
+│── extension/            # Code source de l'extension Chrome
+│   ├── manifest.json     # Manifest de l'extension
+│   ├── background.js     # Gère les événements (ex : récupération du lien YouTube)
+│   ├── content.js        # Injecte l'UI et récupère le résumé depuis l'API
+│   ├── popup.html        # Interface utilisateur optionnelle
+│   ├── popup.js          # Logique du popup
+│   ├── styles.css        # Styles CSS
+│── README.md             # Documentation
+│── .gitignore            # Fichiers à ignorer dans Git
+
+
+Quand un utilisateur regarde une vidéo sur YouTube :
+
+background.js détecte la page et injecte content.js.
+content.js récupère l’URL et appelle api.py pour obtenir un résumé.
+Le résumé est affiché dans une boîte sur le côté droit de la vidéo.
+Via le popup :
+
+L'utilisateur peut entrer une URL manuellement.
+popup.js envoie la requête à api.py et affiche le résumé.
