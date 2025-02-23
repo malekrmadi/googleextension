@@ -1,21 +1,30 @@
 body {
     font-family: Arial, sans-serif;
-    width: 300px;
-    height: 200px;
-    text-align: center;
+    width: 350px;
+    padding: 10px;
 }
 
 h1 {
     font-size: 18px;
+    text-align: center;
+}
+
+h2 {
+    font-size: 16px;
+    margin-top: 10px;
+    border-bottom: 2px solid #007BFF;
+    padding-bottom: 5px;
 }
 
 button {
-    background-color: #ff0000;
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    background-color: #007BFF;
     color: white;
     border: none;
-    padding: 10px;
-    border-radius: 5px;
     cursor: pointer;
+    border-radius: 5px;
     margin-top: 10px;
 }
 
@@ -24,48 +33,72 @@ button:disabled {
     cursor: not-allowed;
 }
 
-#summary {
+#loading {
+    text-align: center;
+    font-weight: bold;
     margin-top: 10px;
-    font-size: 14px;
-    color: #333;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    background-color: #f9f9f9;
-    text-align: left;
 }
 
-#loading {
-    display: none;
-    font-size: 14px;
-    color: #007BFF;
+.summary-box {
     margin-top: 10px;
+}
+
+.chapter {
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+}
+
+.chapter:last-child {
+    border-bottom: none;
+}
+
+.chapter-link {
+    color: #007BFF;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.chapter-link:hover {
+    text-decoration: underline;
+}
+
+.chapter-summary {
+    font-size: 14px;
+    color: #555;
+    margin: 5px 0 0;
+}
+
+#summaryPanel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 400px;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 20px;
+    box-shadow: -5px 0px 10px rgba(0, 0, 0, 0.5);
+    overflow-y: auto;
+    transform: translateX(100%);
+    transition: transform 0.3s ease-in-out;
+}
+
+#summaryPanel.show {
+    transform: translateX(0);
+}
+
+#closeSummary {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: red;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
 }
 
 .hidden {
     display: none;
 }
 
-h2 {
-    font-size: 16px;
-    margin-top: 10px;
-}
-
-#summary a {
-    color: #007BFF;
-    text-decoration: none;
-    font-weight: bold;
-}
-
-#summary a:hover {
-    text-decoration: underline;
-}
-
-#summary div {
-    padding: 10px;
-    border-bottom: 1px solid #ddd;
-}
-
-#summary div:last-child {
-    border-bottom: none;
-}

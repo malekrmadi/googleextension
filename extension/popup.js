@@ -1,67 +1,69 @@
-document.getElementById('getSummary').addEventListener('click', () => {
-    const button = document.getElementById('getSummary');
-    const loading = document.getElementById('loading');
-    const summaryBox = document.getElementById('summary');
+document.getElementById("getDetails").addEventListener("click", () => {
+    const button = document.getElementById("getDetails");
+    const loading = document.getElementById("loading");
+    const summaryBox = document.getElementById("summary");
 
-    // Afficher le loader et désactiver le bouton
-    loading.classList.remove('hidden');
+    // Affiche le loader et désactive le bouton
+    loading.classList.remove("hidden");
     button.disabled = true;
-    summaryBox.innerHTML = ''; // Effacer l'ancien résumé
+    summaryBox.innerHTML = ""; // On vide le contenu précédent
 
-    // Récupérer l'URL de l'onglet actif
+    // Récupère l'URL de la vidéo active
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        if (!tabs || tabs.length === 0) return;
+        if (tabs.length === 0) return;
+        const videoUrl = tabs[0].url;
 
-        const url = tabs[0].url;
-        
-        fetch(`http://localhost:5000/video_summary?url=${encodeURIComponent(url)}`)
-            .then(response => response.json())
-            .then(data => {
-                // Affichage du résumé général
-                summaryBox.innerHTML = `<h2>Résumé général</h2><p>${data.summary}</p>`;
+        fetch(`http://localhost:5000/video_summary?url=${encodeURIComponent(videoUrl)}`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Affichage du résumé général
+            summaryBox.innerHTML = `<h2>Résumé général</h2><p>${data.summary || "Résumé indisponible."}</p>`;
 
-                // Ajout de la section des chapitres
-                if (data.chapters && data.chapters.length > 0) {
-                    const chaptersContainer = document.createElement("div");
-                    chaptersContainer.innerHTML = "<h2>Chapitres</h2>";
-                    
-                    data.chapters.forEach(chapter => {
-                        const chapterElement = document.createElement("div");
-                        chapterElement.style.marginBottom = "10px";
+            // Affichage des chapitres
+            if (data.chapters && data.chapters.length > 0) {
+                const chaptersContainer = document.createElement("div");
+                chaptersContainer.innerHTML = "<h2>Chapitres</h2>";
 
-                        // Lien cliquable pour aller au chapitre
-                        const chapterLink = document.createElement("a");
-                        chapterLink.href = `${url}&t=${timeToSeconds(chapter.start_time)}`;
-                        chapterLink.innerText = `⏩ ${chapter.start_time} - ${chapter.title}`;
-                        chapterLink.style.display = "block";
-                        chapterLink.style.color = "#007BFF";
-                        chapterLink.style.fontWeight = "bold";
-                        chapterLink.style.textDecoration = "none";
-                        chapterLink.target = "_blank"; 
+                data.chapters.forEach(chapter => {
+                    const chapterElement = document.createElement("div");
+                    chapterElement.classList.add("chapter");
 
-                        // Ajout du résumé du chapitre
-                        const chapterSummary = document.createElement("p");
-                        chapterSummary.innerText = chapter.chapter_summary;
-                        chapterSummary.style.margin = "5px 0";
+                    // Lien cliquable pour naviguer vers le chapitre
+                    const chapterLink = document.createElement("a");
+                    chapterLink.href = `${videoUrl}&t=${timeToSeconds(chapter.start_time)}`;
+                    chapterLink.innerText = `⏩ ${chapter.start_time} - ${chapter.title}`;
+                    chapterLink.target = "_blank"; 
+                    chapterLink.classList.add("chapter-link");
 
-                        chapterElement.appendChild(chapterLink);
-                        chapterElement.appendChild(chapterSummary);
-                        chaptersContainer.appendChild(chapterElement);
-                    });
+                    // Résumé du chapitre
+                    const chapterSummary = document.createElement("p");
+                    chapterSummary.innerText = chapter.chapter_summary;
+                    chapterSummary.classList.add("chapter-summary");
 
-                    summaryBox.appendChild(chaptersContainer);
-                } else {
-                    summaryBox.innerHTML += "<p>Aucun chapitre trouvé.</p>";
-                }
-            })
-            .catch(error => {
-                console.error('Erreur:', error);
-                summaryBox.innerHTML = "<p>Erreur lors de la récupération des données.</p>";
-            })
-            .finally(() => {
-                loading.classList.add('hidden');
-                button.disabled = false;
-            });
+                    chapterElement.appendChild(chapterLink);
+                    chapterElement.appendChild(chapterSummary);
+                    chaptersContainer.appendChild(chapterElement);
+                });
+
+                summaryBox.appendChild(chaptersContainer);
+            } else {
+                summaryBox.innerHTML += "<p>Aucun chapitre trouvé.</p>";
+            }
+        })
+        .catch(error => {
+            console.error("Erreur:", error);
+            summaryBox.innerText = "Erreur lors de la récupération des données.";
+        })
+        .finally(() => {
+            loading.classList.add("hidden");
+            button.disabled = false;
+        });
     });
 });
 

@@ -18,7 +18,7 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 genai.configure(api_key=GEMINI_API_KEY)
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, origins="https://www.youtube.com", supports_credentials=True)
            
 def get_youtube_video_info(video_id):
     """ Récupère les informations d'une vidéo YouTube """
