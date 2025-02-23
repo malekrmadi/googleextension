@@ -45,3 +45,27 @@ button:disabled {
 .hidden {
     display: none;
 }
+
+h2 {
+    font-size: 16px;
+    margin-top: 10px;
+}
+
+#summary a {
+    color: #007BFF;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+#summary a:hover {
+    text-decoration: underline;
+}
+
+#summary div {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+#summary div:last-child {
+    border-bottom: none;
+}
