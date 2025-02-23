@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 import google.generativeai as genai
 
 from flask_cors import CORS
-CORS(app)
+
 
 # Charger les variables d'environnement
 load_dotenv()
@@ -18,7 +18,8 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 genai.configure(api_key=GEMINI_API_KEY)
 
 app = Flask(__name__)
-
+CORS(app)
+           
 def get_youtube_video_info(video_id):
     """ Récupère les informations d'une vidéo YouTube """
     youtube = googleapiclient.discovery.build("youtube", "v3", developerKey=YOUTUBE_API_KEY)
